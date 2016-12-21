@@ -16,11 +16,11 @@ def get_mp3_info(folder):
 class AudioServer(object):
     @cherrypy.expose
     def krcl(self):
-        return get_mp3_info('KRCL')
+        return get_mp3_info('KRCL Radio')
 
     @cherrypy.expose
     def kxci(self):
-        return get_mp3_info('KXCI')
+        return get_mp3_info('KXCI Radio')
 
 
 if __name__ == '__main__':
@@ -32,21 +32,21 @@ if __name__ == '__main__':
         },
         '/krcl/download': {
             'tools.staticdir.on': True,
-            'tools.staticdir.dir': os.path.join(os.getcwd(), 'KRCL'),
+            'tools.staticdir.dir': os.path.join(os.getcwd(), 'KRCL Radio'),
             'response.headers.Content-Disposition': 'attachment'
         },
         '/krcl/stream': {
             'tools.staticdir.on': True,
-            'tools.staticdir.dir': os.path.join(os.getcwd(), 'KRCL')
+            'tools.staticdir.dir': os.path.join(os.getcwd(), 'KRCL Radio')
         },
         '/kxci/download': {
             'tools.staticdir.on': True,
-            'tools.staticdir.dir': os.path.join(os.getcwd(), 'KXCI'),
+            'tools.staticdir.dir': os.path.join(os.getcwd(), 'KXCI Radio'),
             'response.headers.Content-Disposition': 'attachment'
         },
         '/kxci/stream': {
             'tools.staticdir.on': True,
-            'tools.staticdir.dir': os.path.join(os.getcwd(), 'KXCI')
+            'tools.staticdir.dir': os.path.join(os.getcwd(), 'KXCI Radio')
         }
     }
 
