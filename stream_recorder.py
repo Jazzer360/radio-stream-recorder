@@ -8,6 +8,8 @@ import requests
 import socket
 import subprocess
 import threading
+import wx
+import wx_console
 import yaml
 
 
@@ -87,39 +89,8 @@ def record(stream, program, start, end):
                 return file_path
 
 
-def reencode_thread(infile, intype, **metadata):
-    outfile = '{}.mp3'.format(infile.rsplit('.', 1)[0])
-    if 'title' not in metadata:
-        metadata['title'] = os.path.split(infile)[1].rsplit('.', 1)[0]
-    command = ['ffmpeg', '-f', intype, '-i', infile,
-               '-id3v2_version', '3', '-write_id3v1', '1']
-    for key, value in metadata.iteritems():
-        command += ['-metadata', '{}={}'.format(key, value)]
-    command.append(outfile)
-    log.info('Sending %s to ffmpeg', infile)
-    subprocess.check_call(command)
-    log.info('%s cleaned', outfile)
-    if os.path.exists(outfile):
-        os.remove(infile)
-
-
-def sanitize_stream(stream, stream_type, **metadata):
-    threading.Thread(target=reencode_thread,
-                     args=(stream, stream_type),
-                     kwargs=metadata).start()
-
-
-log = logging.getLogger('Stream recorder')
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Record streamed radio programs')
-    parser.add_argument('config', help='Configuration file')
-    args = parser.parse_args()
-    configure_logger(args.config.rsplit('.', 1)[0] + '.log')
-    config = Config(args.config)
-
+def record_loop(config, log):
+    log.info('Starting recording loop for %s', config.stream_name)
     while True:
         now = datetime.now()
         for program in config.programs:
@@ -145,3 +116,54 @@ if __name__ == '__main__':
                     break
         else:
             sleep(5)
+
+
+def reencode_thread(infile, intype, **metadata):
+    outfile = '{}.mp3'.format(infile.rsplit('.', 1)[0])
+    if 'title' not in metadata:
+        metadata['title'] = os.path.split(infile)[1].rsplit('.', 1)[0]
+    command = ['ffmpeg', '-f', intype, '-i', infile,
+               '-id3v2_version', '3', '-write_id3v1', '1']
+    for key, value in metadata.iteritems():
+        command += ['-metadata', '{}={}'.format(key, value)]
+    command.append(outfile)
+    log.info('Sending %s to ffmpeg', infile)
+    subprocess.check_call(command)
+    log.info('%s cleaned', outfile)
+    if os.path.exists(outfile):
+        os.remove(infile)
+
+
+def sanitize_stream(stream, stream_type, **metadata):
+    threading.Thread(target=reencode_thread,
+                     args=(stream, stream_type),
+                     kwargs=metadata).start()
+
+
+if __name__ == '__main__':
+    # Build config from args
+    parser = argparse.ArgumentParser(
+        description='Record streamed radio programs')
+    parser.add_argument('config', help='Configuration file')
+    args = parser.parse_args()
+    config = Config(args.config)
+
+    # Setup wx log frame
+    app = wx.App(False)
+    title = '{} Recording'.format(config.stream_name)
+    wxlog = wx_console.LoggingFrame(None, title=title, icon='../record.png')
+
+    # Setup logger
+    log = logging.getLogger('Stream recorder')
+    log.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
+    fh = logging.FileHandler(args.config.rsplit('.', 1)[0] + '.log')
+    fh.setFormatter(formatter)
+    log.addHandler(fh)
+    log.addHandler(wxlog.handler)
+
+    # Start recording thread
+    threading.Thread(target=record_loop,
+                     args=(config, log)).start()
+
+    app.MainLoop()

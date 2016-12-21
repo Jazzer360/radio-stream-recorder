@@ -1,6 +1,6 @@
 import logging
-import sys
 import wx
+
 import wx.lib.newevent
 
 # create event type
@@ -11,15 +11,12 @@ class wxLogHandler(logging.Handler):
     def __init__(self, wxDest=None):
         logging.Handler.__init__(self)
         self.wxDest = wxDest
-        self.level = logging.DEBUG
-
-    def flush(self):
-        pass
+        # self.level = logging.DEBUG
 
     def emit(self, record):
         try:
             msg = self.format(record)
-            evt = wxLogEvent(message=msg, levelname=record.levelname)
+            evt = wxLogEvent(msg=msg)
             wx.PostEvent(self.wxDest, evt)
         except (KeyboardInterrupt, SystemExit):
             raise
@@ -42,14 +39,18 @@ class TaskbarIcon(wx.TaskBarIcon):
         self.frame.Restore()
 
 
-class ConsoleFrame(wx.Frame):
+class LoggingFrame(wx.Frame):
     def __init__(self, *args, **kwargs):
         icon = kwargs.pop('icon')
-        super(ConsoleFrame, self).__init__(*args, **kwargs)
+        super(LoggingFrame, self).__init__(*args, **kwargs)
 
-        self.tb_icon = TaskbarIcon(self, icon, kwargs['title'])
+        self.handler = wxLogHandler(self)
+
         self.Bind(wx.EVT_ICONIZE, self.onMinimize)
         self.Bind(wx.EVT_CLOSE, self.onClose)
+        self.Bind(EVT_WX_LOG_EVENT, self.onLog)
+
+        self.tb_icon = TaskbarIcon(self, icon, kwargs['title'])
 
         panel = wx.Panel(self, wx.ID_ANY)
         style = wx.TE_MULTILINE | wx.TE_READONLY | wx.HSCROLL
@@ -60,8 +61,6 @@ class ConsoleFrame(wx.Frame):
         sizer.Add(self.console, 1, wx.ALL | wx.EXPAND, 5)
         panel.SetSizer(sizer)
 
-        sys.stdout = self.console
-
     def onClose(self, evt):
         self.tb_icon.RemoveIcon()
         self.tb_icon.Destroy()
@@ -71,8 +70,12 @@ class ConsoleFrame(wx.Frame):
         if self.IsIconized():
             self.Hide()
 
+    def onLog(self, e):
+        self.console.AppendText(e.msg)
+
+
 # Run the program
 if __name__ == "__main__":
     app = wx.App(False)
-    frame = ConsoleFrame(None, title="test", icon="record.png").Show()
+    frame = LoggingFrame(None, title="test", icon="record.png").Show()
     app.MainLoop()
