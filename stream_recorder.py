@@ -79,7 +79,9 @@ def make_folder(name):
 
 
 def record(stream, program, start, end):
-    file_path = program.name + '\\' + program.name + ' %Y-%m-%d.stream'
+    file_path = (program.stream_name + '\\' +
+                 program.name + '\\' +
+                 program.name + ' %Y-%m-%d.stream')
     file_path = start.strftime(file_path)
     make_folder(program.name)
     with open(file_path, 'ab') as f:
@@ -89,33 +91,53 @@ def record(stream, program, start, end):
                 return file_path
 
 
-def record_loop(config, log):
-    log.info('Starting recording loop for %s', config.stream_name)
-    while True:
-        now = datetime.now()
-        for program in config.programs:
-            start, end = program.latest_air_segment()
-            if now >= start and now < end:
-                try:
-                    log.info('Starting to record %s', program.name)
-                    filename = record(config.stream, program, start, end)
-                    log.info('%s has finished', program.name)
-                    sanitize_stream(
-                        filename, config.stream_type, **program.metadata)
-                except (requests.exceptions.Timeout, socket.timeout) as e:
-                    log.error('Connection to host timed out', exc_info=e)
-                    sleep(5)
-                except requests.exceptions.ConnectionError as e:
-                    log.error('Unable to connect to host', exc_info=e)
-                    sleep(5)
-                except socket.error as e:
-                    log.error('Connection was lost unexpectedly', exc_info=e)
-                    sleep(5)
-                finally:
-                    log.info('Recording of %s stopped', program.name)
-                    break
-        else:
-            sleep(5)
+class RecordingThread(threading.Thread):
+    def __init__(self, config, log):
+        super(RecordingThread, self).__init__()
+        self.config = config
+        self.log = log
+        self._stopped = threading.Event()
+
+    def run(self):
+        self.log.info('Starting recording loop for %s',
+                      self.config.stream_name)
+        while True:
+            # TODO: thread will keep going if inside record method
+            if self.stopped():
+                return
+            now = datetime.now()
+            for program in self.config.programs:
+                start, end = program.latest_air_segment()
+                if now >= start and now < end:
+                    try:
+                        self.log.info('Starting to record %s', program.name)
+                        filename = record(self.config.stream, program,
+                                          start, end)
+                        self.log.info('%s has finished', program.name)
+                        sanitize_stream(filename, self.config.stream_type,
+                                        **program.metadata)
+                    except (requests.exceptions.Timeout, socket.timeout) as e:
+                        self.log.error('Connection to host timed out',
+                                       exc_info=e)
+                        sleep(5)
+                    except requests.exceptions.ConnectionError as e:
+                        self.log.error('Unable to connect to host', exc_info=e)
+                        sleep(5)
+                    except socket.error as e:
+                        self.log.error('Connection was lost unexpectedly',
+                                       exc_info=e)
+                        sleep(5)
+                    finally:
+                        self.log.info('Recording of %s stopped', program.name)
+                        break
+            else:
+                sleep(5)
+
+    def stopped(self):
+        return self._stopped.isSet()
+
+    def stop(self):
+        self._stopped.set()
 
 
 def reencode_thread(infile, intype, **metadata):
@@ -163,7 +185,7 @@ if __name__ == '__main__':
     log.addHandler(wxlog.handler)
 
     # Start recording thread
-    threading.Thread(target=record_loop,
-                     args=(config, log)).start()
+    recording_thread = RecordingThread(config, log).start()
 
     app.MainLoop()
+    recording_thread.stop()

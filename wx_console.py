@@ -71,7 +71,7 @@ class LoggingFrame(wx.Frame):
             self.Hide()
 
     def onLog(self, e):
-        self.console.AppendText(e.msg)
+        self.console.AppendText('%s\n' % e.msg)
 
 
 # Run the program
