@@ -1,0 +1,120 @@
+stream_name: KRCL Radio
+stream_generator: krcl.stream
+stream_type: mp3
+
+programs:
+
+########## M-F Regular Programming ##########
+- name: Drive Time
+  start: 15:00
+  duration: 2:00
+  days: M T W Th F
+
+- name: Little Bit Louder Now
+  start: 17:00
+  duration: 2:00
+  days: M T W Th F
+
+########## M-F Mixed Programming ##########
+- name: Illustrated Blues
+  start: 4:00
+  duration: 2:00
+  days: F
+  genre: Blues
+
+- name: 'Red, White & Blues'
+  start: 21:00
+  duration: 2:30
+  days: M
+  genre: Blues
+
+- name: Thursday Night Psych-Out
+  start: 21:00
+  duration: 2:30
+  days: Th
+  genre: Psychadelic Rock
+
+- name: Not a Side Show
+  start: 21:00
+  duration: 2:30
+  days: F
+
+- name: Night Train
+  start: 23:30
+  duration: 2:30
+  days: M
+
+- name: The Dirty Boulevard
+  start: 23:30
+  duration: 2:30
+  days: Th
+
+- name: Friday Night Fallout
+  start: 23:30
+  duration: 2:30
+  days: F
+  genre: 'Hip-Hop'
+
+########## Sat Programming ##########
+- name: Sonic Buffet
+  start: 6:00
+  duration: 2:00
+  days: S
+
+- name: Saturday Breakfast Jam
+  start: 8:00
+  duration: 3:00
+  days: S
+
+- name: Saturday Sagebrush Serenade
+  start: 11:00
+  duration: 3:00
+  days: S
+
+- name: Smile Jamaica
+  start: 17:00
+  duration: 3:00
+  days: S
+  genre: Reggae
+
+- name: World Village
+  start: 20:00
+  duration: 2:00
+  days: S
+
+- name: Blood and Fire Radio
+  start: 23:00
+  duration: 2:00
+  days: S
+
+########## Sun Programming ##########
+- name: RadioSchmadio
+  start: 1:00
+  duration: 2:00
+  days: Su
+
+- name: Backporch Blues Ramble
+  start: 6:00
+  duration: 2:00
+  days: Su
+
+- name: Sunday Sagebrush Serenade
+  start: 11:00
+  duration: 3:00
+  days: Su
+
+- name: Bluegrass Express
+  start: 14:00
+  duration: 3:00
+  days: Su
+  genre: Bluegrass
+
+- name: Fret n' Fiddle
+  start: 17:00
+  duration: 2:00
+  days: Su
+
+- name: The Grateful Dead Hour
+  start: 19:00
+  duration: 1:00
+  days: Su

@@ -1,0 +1,60 @@
+stream_name: KXCI Radio
+stream_generator: kxci.stream
+stream_type: aac
+
+programs:
+
+- name: Blues Unlimited
+  start: 1:00
+  duration: 2:30
+  days: W
+
+- name: Vinyl Frontier
+  start: 23:00
+  duration: 2:00
+  days: W
+
+- name: The 60s Syringe
+  start: 5:00
+  duration: 2:00
+  days: S
+
+- name: Blues Review
+  start: 18:00
+  duration: 4:00
+  days: S
+
+- name: Dead Air
+  start: 19:00
+  duration: 3:00
+  days: Su
+
+- name: Al Perry's Clambake
+  start: 23:00
+  duration: 2:00
+  days: T
+
+- name: Bat Country Radio
+  start: 1:00
+  duration: 2:00
+  days: F
+
+- name: Kidd Squidd's Mystery Jukebox
+  start: 15:00
+  duration: 3:00
+  days: S
+
+- name: Rasta Riddims
+  start: 22:00
+  duration: 2:00
+  days: Su
+
+- name: Search and Rescue
+  start: 4:00
+  duration: 2:00
+  days: F
+
+- name: Impak
+  start: 22:00
+  duration: 3:00
+  days: S

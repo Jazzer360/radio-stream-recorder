@@ -1,0 +1,8 @@
+/venv
+*.mp3
+*.stream
+*.log
+desktop.ini
+*.pyc
+*.jpg
+*.exe
