@@ -116,7 +116,6 @@ class RecordingThread(threading.Thread):
                 sleep(5)
             finally:
                 self.log.info('Recording of %s stopped', program.name)
-                break
 
     def stopped(self):
         return self._stop.isSet()
