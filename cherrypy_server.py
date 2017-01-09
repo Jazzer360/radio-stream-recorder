@@ -37,7 +37,8 @@ if __name__ == '__main__':
         },
         '/krcl/stream': {
             'tools.staticdir.on': True,
-            'tools.staticdir.dir': os.path.join(os.getcwd(), 'KRCL Radio')
+            'tools.staticdir.dir': os.path.join(os.getcwd(), 'KRCL Radio'),
+            'response.stream': True
         },
         '/kxci/download': {
             'tools.staticdir.on': True,

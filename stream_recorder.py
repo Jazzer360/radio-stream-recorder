@@ -172,6 +172,7 @@ if __name__ == '__main__':
     fh = logging.FileHandler(args.config.rsplit('.', 1)[0] + '.log')
     fh.setFormatter(formatter)
     log.addHandler(fh)
+    wxlog.handler.setFormatter(formatter)
     log.addHandler(wxlog.handler)
 
     # Start recording thread
