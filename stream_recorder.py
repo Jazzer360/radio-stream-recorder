@@ -8,8 +8,6 @@ import requests
 import socket
 import subprocess
 import threading
-import wx
-import wx_console
 import yaml
 
 
@@ -165,13 +163,9 @@ if __name__ == '__main__':
         description='Record streamed radio programs')
     parser.add_argument('config', help='Configuration file')
     parser.add_argument('-d', '--destination', help='Destination folder')
+    parser.add_argument('--no_wx', help='Disable wx GUI', action='store_true')
     args = parser.parse_args()
     config = Config(args.config)
-
-    # Setup wx log frame
-    app = wx.App(False)
-    title = '{} Recording'.format(config.stream_name)
-    wxlog = wx_console.LoggingFrame(None, title=title, icon='record.png')
 
     # Setup logger
     log = logging.getLogger('Stream recorder')
@@ -180,12 +174,33 @@ if __name__ == '__main__':
     fh = logging.FileHandler(args.config.rsplit('.', 1)[0] + '.log')
     fh.setFormatter(formatter)
     log.addHandler(fh)
-    wxlog.handler.setFormatter(formatter)
-    log.addHandler(wxlog.handler)
 
-    # Start recording thread
-    recording_thread = RecordingThread(config, log, args.destination)
-    recording_thread.start()
+    try:
+        import wx
+        import wx_console
+        using_wx = True and not args.no_wx
+    except ImportError:
+        using_wx = False
 
-    app.MainLoop()
-    recording_thread.stop()
+    if using_wx:
+        # Setup wx log frame
+        app = wx.App(False)
+        title = '{} Recording'.format(config.stream_name)
+        wxlog = wx_console.LoggingFrame(None, title=title, icon='record.png')
+        wxlog.handler.setFormatter(formatter)
+        log.addHandler(wxlog.handler)
+
+        # Start recording thread and wx main loop
+        recording_thread = RecordingThread(config, log, args.destination)
+        recording_thread.start()
+        app.MainLoop()
+        recording_thread.stop()
+    else:
+        # Setup console log handler
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(formatter)
+        log.addHandler(console_handler)
+
+        # Start recording
+        recording_thread = RecordingThread(config, log, args.destination)
+        recording_thread.run()
