@@ -72,6 +72,7 @@ class LoggingFrame(wx.Frame):
 
     def onLog(self, e):
         self.console.AppendText('%s\n' % e.msg)
+        self.console.ScrollLines(-1)
 
 
 # Run the program
