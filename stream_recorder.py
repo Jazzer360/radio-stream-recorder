@@ -62,19 +62,23 @@ class Program(object):
 
 
 class RecordingThread(threading.Thread):
-    def __init__(self, config, log):
+    def __init__(self, config, log, dest=None):
         super(RecordingThread, self).__init__()
         self.config = config
         self.log = log
+        self.dest = dest
         self._stop = threading.Event()
 
     def record(self, program):
         start, end = program.latest_air_segment()
-        file_path = (program.stream_name + '\\' +
-                     program.name + '\\' +
-                     program.name + ' %Y-%m-%d.stream')
-        file_path = start.strftime(file_path)
-        make_folder(program.stream_name + '\\' + program.name)
+        datestring = start.strftime('%Y-%m-%d')
+        file_path = '{}\\{}\\{} {}.stream'.format(program.stream_name,
+                                                  program.name,
+                                                  program.name,
+                                                  datestring)
+        if self.dest:
+            file_path = os.path.join(self.dest, file_path)
+        make_folder(os.path.dirname(file_path), self.dest)
         with open(file_path, 'ab') as f:
             for block in self.config.stream():
                 f.write(block)
@@ -124,8 +128,11 @@ class RecordingThread(threading.Thread):
         self._stop.set()
 
 
-def make_folder(name):
-    path = '{}/{}'.format(os.getcwd(), name)
+def make_folder(name, root=None):
+    if root:
+        path = os.path.join(root, name)
+    else:
+        path = name
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -157,6 +164,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Record streamed radio programs')
     parser.add_argument('config', help='Configuration file')
+    parser.add_argument('-d', '--destination', help='Destination folder')
     args = parser.parse_args()
     config = Config(args.config)
 
@@ -176,7 +184,7 @@ if __name__ == '__main__':
     log.addHandler(wxlog.handler)
 
     # Start recording thread
-    recording_thread = RecordingThread(config, log)
+    recording_thread = RecordingThread(config, log, args.destination)
     recording_thread.start()
 
     app.MainLoop()
