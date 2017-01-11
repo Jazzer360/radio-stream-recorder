@@ -1,54 +1,57 @@
-from collections import defaultdict
 import json
 import os
 import cherrypy
 
 
-def get_mp3_info(folder):
-    obj = defaultdict(list)
-    for root, dirs, files in os.walk(folder):
-        for f in files:
-            if f.endswith('.mp3'):
-                obj[root.rsplit('\\')[-1]].append(f)
-    return json.dumps(obj)
+def make_app(folder, rel_url):
+    app = ProgramList(folder)
+    conf = {}
+    conf['/download'] = {
+        'tools.staticdir.on': True,
+        'tools.staticdir.dir': folder,
+        'response.headers.Content-Disposition': 'attachment'
+    }
+    conf['/stream'] = {
+        'tools.staticdir.on': True,
+        'tools.staticdir.dir': folder,
+        'response.stream': True,
+    }
+    return (app, rel_url, conf)
 
 
-class AudioServer(object):
+class ProgramList(object):
+    def __init__(self, root_folder):
+        self.root_folder = root_folder
+
+    def _cp_dispatch(self, vpath):
+        if len(vpath) == 1:
+            cherrypy.request.params['program'] = vpath.pop()
+            return self
+        return vpath
+
     @cherrypy.expose
-    def krcl(self):
-        return get_mp3_info('KRCL Radio')
-
-    @cherrypy.expose
-    def kxci(self):
-        return get_mp3_info('KXCI Radio')
+    def index(self, program=None):
+        if program:
+            print program
+            folder = os.path.join(self.root_folder, program)
+            resp = [name for name in os.listdir(folder)
+                    if os.path.isfile(os.path.join(folder, name)) and
+                    name.endswith('.mp3')]
+        else:
+            resp = [name for name in os.listdir(self.root_folder)
+                    if os.path.isdir(os.path.join(self.root_folder, name))]
+        return json.dumps(resp)
 
 
 if __name__ == '__main__':
 
-    conf = {
-        'global': {
+    cherrypy.config.update(
+        {
             'server.socket_host': '192.168.0.14',
-            'server.socket_port': 80
-        },
-        '/krcl/download': {
-            'tools.staticdir.on': True,
-            'tools.staticdir.dir': os.path.join(os.getcwd(), 'KRCL Radio'),
-            'response.headers.Content-Disposition': 'attachment'
-        },
-        '/krcl/stream': {
-            'tools.staticdir.on': True,
-            'tools.staticdir.dir': os.path.join(os.getcwd(), 'KRCL Radio'),
-            'response.stream': True
-        },
-        '/kxci/download': {
-            'tools.staticdir.on': True,
-            'tools.staticdir.dir': os.path.join(os.getcwd(), 'KXCI Radio'),
-            'response.headers.Content-Disposition': 'attachment'
-        },
-        '/kxci/stream': {
-            'tools.staticdir.on': True,
-            'tools.staticdir.dir': os.path.join(os.getcwd(), 'KXCI Radio')
-        }
-    }
+            'server.socket_port': 8800
+        })
 
-    cherrypy.quickstart(AudioServer(), '/', conf)
+    cherrypy.tree.mount(*make_app('D:\\Radio Podcasts\\KRCL Radio', '/krcl'))
+
+    cherrypy.engine.start()
+    cherrypy.engine.block()
